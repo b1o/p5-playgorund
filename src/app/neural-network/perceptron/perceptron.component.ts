@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { NeuralNetwork } from './neural-network';
 import { Matrix } from './matrix';
+import { Bird } from './bird';
+import { GeneticAlgorith } from './ga';
 
 declare var p5;
 
@@ -13,54 +15,56 @@ export class PerceptronComponent implements OnInit {
   private p;
   private p5;
 
+  private population = 100;
+
   private brain: NeuralNetwork;
+  private slider;
+  private birds: Bird[];
+  private ga: GeneticAlgorith;
 
   private trainingData = [
-
+    { inputs: [0, 0], targets: [0] },
+    { inputs: [1, 0], targets: [1] },
+    { inputs: [0, 1], targets: [1] },
+    { inputs: [1, 1], targets: [0] }
   ];
 
-  constructor() {}
+  constructor() {
+  }
 
   private drawing(p) {
     this.p = p;
     this.p.setup = () => {
-      this.p.createCanvas(20, 20);
+      this.p.createCanvas(600, 400);
       this.p.background(0);
+      this.birds = new Array<Bird>();
 
-      this.p.loadPixels();
-      console.log(this.p.pixels.length);
 
-      for (let i = 1; i < 255; i++) {
-        this.trainingData.push({inputs: this.p.pixels.map(pixel => pixel / 255), targets: [i / 255]});
-        this.p.background(i);
-        this.p.loadPixels();
+      for (let i = 0; i < this.population; i++) {
+        this.birds.push(new Bird(this.p, this.p.random(this.p.width)));
       }
+      this.ga = new GeneticAlgorith(this.p, this.birds, this.population);
 
-      console.log(this.trainingData);
-      this.brain = new NeuralNetwork(1600, 800, 1);
-
-      for (let i = 0; i < 10000; i++) {
-        const data = this.p.random(this.trainingData);
-        this.brain.train(data.inputs, data.targets);
-        console.log('training complete: ', (i / 5000) * 100);
-      }
-
-      console.log('training done');
-
-      // console.log(this.brain.feedForward([0, 1]));
-      // console.log(this.brain.feedForward([1, 0]));
-      // console.log(this.brain.feedForward([0, 0]));
-      // console.log(this.brain.feedForward([1, 1]));
     };
 
-    this.p.mouseClicked = () => {
-      const value = this.p.random(255);
-      this.p.background(value);
-      this.p.loadPixels();
-      console.log(this.brain.feedForward(this.p.pixels), value / 255);
-    };
+    this.p.draw = () => {
+      this.p.background(0);
+      for (const bird of this.birds) {
+        bird.think();
+        bird.update();
+        bird.show();
 
-    this.p.draw = () => {};
+
+      }
+
+      this.birds = this.birds.filter(b => b.alive);
+      console.log(this.birds.length);
+
+      if (this.birds.length <= 0) {
+       this.birds = this.ga.nextGeneration();
+      }
+
+    };
   }
 
   ngOnInit() {

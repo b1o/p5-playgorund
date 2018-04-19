@@ -19,7 +19,7 @@ export class NeuralNetwork {
   private bias_h: Matrix;
   private bias_o: Matrix;
 
-  private learningRate = 0.3;
+  public learningRate = 0.1;
 
   constructor(numInput: number, numHidden: number, numOutput: number) {
     this.input_nodes = numInput;

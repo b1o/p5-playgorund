@@ -22,7 +22,8 @@
         "styles.css"
       ],
       "scripts": [
-        "assets/p5/p5.min.js"
+        "assets/p5/p5.min.js",
+        "assets/p5/addons/p5.dom.min.js"
       ],
       "environmentSource": "environments/environment.ts",
       "environments": {

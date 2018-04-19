@@ -6,7 +6,7 @@ export class Particle {
   private pos;
   private vel;
   private acc;
-  private maxSpeed = 10;
+  private maxSpeed = 4;
   private prevPos;
   private h = 0;
   private randomInc;
