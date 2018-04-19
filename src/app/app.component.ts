@@ -1,4 +1,14 @@
-import { Component } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  ViewChild,
+  ElementRef,
+  HostBinding,
+  HostListener,
+  ChangeDetectorRef
+} from '@angular/core';
+
+declare var p5;
 
 @Component({
   selector: 'app-root',
