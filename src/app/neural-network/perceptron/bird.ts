@@ -26,10 +26,10 @@ export class Bird {
   public fitness = 0;
 
   public visionRadius = 32 * 5;
-  public health = 1;
-  public maxHealth = 3;
+  public health = 6;
+  public maxHealth = 6;
   public minSpeed = 0.25;
-  public maxSpeed = 4;
+  public maxSpeed = 5;
   public acc;
 
   private totalSensors = 8;
@@ -101,8 +101,8 @@ export class Bird {
     inputs[1] = this.p.constrain(this.p.map(this.pos.y, 50, 0, 0, 1), 0, 1);
     inputs[2] = this.p.constrain(this.p.map(this.pos.x, this.p.width - 50, this.p.width, 0, 1), 0, 1);
     inputs[3] = this.p.constrain(this.p.map(this.pos.y, this.p.height - 50, this.p.height, 0, 1), 0, 1);
-    inputs[4] = this.velocity.x / 10;
-    inputs[5] = this.velocity.y / 10;
+    inputs[4] = this.velocity.x / this.maxSpeed;
+    inputs[5] = this.velocity.y / this.maxSpeed;
 
     for (let j = 0; j < this.sensors.length; j++) {
       inputs[j + 6] = this.p.map(this.sensors[j].val, 0, 250, 1, 0);
@@ -112,10 +112,10 @@ export class Bird {
 
     const outputs = this.brain.predict(inputs);
     const desired = this.p.createVector(2 * outputs[0] - 1, 2 * outputs[1] - 1);
-    desired.mult(10);
+    desired.mult(this.maxSpeed);
     // Craig Reynolds steering formula
     const steer = p5.Vector.sub(desired, this.velocity);
-    steer.limit(0.1);
+    steer.limit(0.5);
     // Apply the force
     this.acc.add(steer);
   }
