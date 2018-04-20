@@ -1,156 +1,140 @@
 export class Matrix {
-  private rows;
-  private cols;
+  public rows: number;
+  public cols: number;
+  public data: Array<any>;
 
-  public data;
+  public static fromArray(arr: Array<Array<number>>): Matrix {
+    return new Matrix(arr.length, 1).map((e, i) => arr[i]);
+  }
 
-  public static multiply(a, b) {
-    if (a.cols !== b.rows) {
-      console.error('Columns of A must match rows of B');
-      return undefined;
+  public static subtract(a: Matrix, b: Matrix): Matrix {
+    if (a.rows !== b.rows || a.cols !== b.cols) {
+      console.log('Columns and Rows of A must match Columns and Rows of B.');
+      return;
     }
 
-    const result = new Matrix(a.rows, b.cols);
+    // Return a new Matrix a-b
+    return new Matrix(a.rows, a.cols)
+      .map((_, i, j) => a.data[i][j] - b.data[i][j]);
+  }
 
-    for (let i = 0; i < result.rows; i++) {
-      for (let j = 0; j < result.cols; j++) {
+  public static transpose(matrix: Matrix): Matrix {
+    return new Matrix(matrix.cols, matrix.rows)
+      .map((_, i, j) => matrix.data[j][i]);
+  }
+
+  public static multiply(a: Matrix, b: Matrix): Matrix {
+    // Matrix product
+    if (a.cols !== b.rows) {
+      console.log('Columns of A must match rows of B.');
+      return;
+    }
+
+    return new Matrix(a.rows, b.cols)
+      .map((e, i, j) => {
         // Dot product of values in col
-
         let sum = 0;
         for (let k = 0; k < a.cols; k++) {
           sum += a.data[i][k] * b.data[k][j];
         }
-
-        result.data[i][j] = sum;
-      }
-    }
-
-    return result;
+        return sum;
+      });
   }
 
-  public static fromArray(arr) {
-    const m = new Matrix(arr.length, 1);
-    for (let i = 0; i < arr.length; i++) {
-      m.data[i][0] = arr[i];
-    }
+  public static map(matrix: Matrix, func: Function) {
+    // Apply a function to every element of matrix
+    return new Matrix(matrix.rows, matrix.cols)
+      .map((e, i, j) => func(matrix.data[i][j], i, j));
+  }
 
+  public static deserialize(data) {
+    if (typeof data === 'string') {
+      data = JSON.parse(data);
+    }
+    const matrix = new Matrix(data.rows, data.cols);
+    matrix.data = data.data;
+    return matrix;
+  }
+
+  constructor(rows: number, cols: number) {
+    this.rows = rows;
+    this.cols = cols;
+    this.data = new Array<any>(this.rows).fill(0).map(() => new Array<any>(this.cols).fill(0));
+  }
+
+  copy(): Matrix {
+    const m = new Matrix(this.rows, this.cols);
+    for (let i = 0; i < this.rows; i++) {
+      for (let j = 0; j < this.cols; j++) {
+        m.data[i][j] = this.data[i][j];
+      }
+    }
     return m;
   }
 
-  public static substract(a: Matrix, b: Matrix): Matrix {
-    const result = new Matrix(a.rows, a.cols);
-
-    for (let i = 0; i < result.rows; i++) {
-      for (let j = 0; j < result.cols; j++) {
-        result.data[i][j] = a.data[i][j] - b.data[i][j];
-      }
-    }
-
-    return result;
-  }
-
-  public static transpose(matrix: Matrix) {
-    const result = new Matrix(matrix.cols, matrix.rows);
-
-    for (let i = 0; i < matrix.rows; i++) {
-      for (let j = 0; j < matrix.cols; j++) {
-        result.data[j][i] = matrix.data[i][j];
-      }
-    }
-
-    return result;
-  }
-
-  public static map(
-    matrix,
-    predicate: (value: number, x?: number, y?: number) => number
-  ) {
-    const result = new Matrix(matrix.rows, matrix.cols);
-    result.map((e, i, j) => predicate(matrix.data[i][j], i, j));
-
-    return result;
-  }
-
-  constructor(rows, cols) {
-    this.rows = rows;
-    this.cols = cols;
-
-    this.data = [];
-
-    for (let i = 0; i < this.rows; i++) {
-      this.data[i] = [];
-
-      for (let j = 0; j < this.cols; j++) {
-        this.data[i][j] = 0;
-      }
-    }
-  }
-
-  public randomize() {
-    for (let i = 0; i < this.rows; i++) {
-      for (let j = 0; j < this.cols; j++) {
-        this.data[i][j] = Math.random() * 2 - 1;
-      }
-    }
-  }
-
-  public toArray() {
+  toArray(){
     const arr = [];
-
     for (let i = 0; i < this.rows; i++) {
       for (let j = 0; j < this.cols; j++) {
         arr.push(this.data[i][j]);
       }
     }
-
     return arr;
   }
 
-  public map(predicate: (value: number, x?: number, y?: number) => number) {
-    if (!(predicate instanceof Function)) {
-      throw new Error('predicator must be a function');
-    }
-
-    for (let i = 0; i < this.rows; i++) {
-      for (let j = 0; j < this.cols; j++) {
-        this.data[i][j] = predicate(this.data[i][j], i, j);
-      }
-    }
-
-    return this;
+  randomize() {
+    return this.map(e => Math.random() * 2 - 1);
   }
 
-  public multiply(n) {
+  add(n: number | Matrix) {
     if (n instanceof Matrix) {
+      if (this.rows !== n.rows || this.cols !== n.cols) {
+        console.log('Columns and Rows of A must match Columns and Rows of B.');
+        return;
+      }
+      return this.map((e, i, j) => e + n.data[i][j]);
+    } else {
+      return this.map(e => e + n);
+    }
+  }
+
+  multiply(n: number | Matrix) {
+    if (n instanceof Matrix) {
+      if (this.rows !== n.rows || this.cols !== n.cols) {
+        console.log('Columns and Rows of A must match Columns and Rows of B.');
+        return;
+      }
+
       // hadamard product
       return this.map((e, i, j) => e * n.data[i][j]);
     } else {
       // Scalar product
-      for (let i = 0; i < this.rows; i++) {
-        for (let j = 0; j < this.cols; j++) {
-          this.data[i][j] *= n;
-        }
-      }
+      return this.map(e => e * n);
     }
   }
 
-  public add(n) {
-    if (n instanceof Matrix) {
-      for (let i = 0; i < this.rows; i++) {
-        for (let j = 0; j < this.cols; j++) {
-          this.data[i][j] += n.data[i][j];
-        }
-      }
-    } else {
-      for (let i = 0; i < this.rows; i++) {
-        for (let j = 0; j < this.cols; j++) {
-          this.data[i][j] += n;
-        }
+  map(func) {
+    // Apply a function to every element of matrix
+    if (!(func instanceof Function)) {
+      console.log(func);
+    }
+
+    for (let i = 0; i < this.rows; i++) {
+      for (let j = 0; j < this.cols; j++) {
+        const val = this.data[i][j];
+        this.data[i][j] = func(val, i, j);
+
       }
     }
+    return this;
   }
 
-  public print() {
+  print() {
     console.table(this.data);
+    return this;
+  }
+
+  serialize() {
+    return JSON.stringify(this);
   }
 }
