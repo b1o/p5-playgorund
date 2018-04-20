@@ -48,9 +48,9 @@ export class Bird {
       this.brain = x;
       this.brain.mutate(this.mutate.bind(this));
     } else {
-      const inputs = this.sensors.length + 6;
+      const inputs = this.sensors.length + 7;
 
-      this.brain = new NeuralNetwork(inputs, 32, 2);
+      this.brain = new NeuralNetwork(inputs, 64, 2);
 
     }
 
@@ -71,9 +71,12 @@ export class Bird {
 
   public think(food) {
 
+    if(!this.alive) {
+      return;
+    }
 
     for (let j = 0; j < this.sensors.length; j++) {
-      this.sensors[j].val = 250;
+      this.sensors[j].val = 150;
     }
 
     for (let i = 0; i < food.length; i++) {
@@ -81,7 +84,7 @@ export class Bird {
 
       const dist = p5.Vector.dist(this.pos, otherPos);
 
-      if (dist > 250) {
+      if (dist > 150) {
         continue;
       }
 
@@ -103,9 +106,10 @@ export class Bird {
     inputs[3] = this.p.constrain(this.p.map(this.pos.y, this.p.height - 50, this.p.height, 0, 1), 0, 1);
     inputs[4] = this.velocity.x / this.maxSpeed;
     inputs[5] = this.velocity.y / this.maxSpeed;
+    inputs[6] = this.health / this.maxHealth;
 
     for (let j = 0; j < this.sensors.length; j++) {
-      inputs[j + 6] = this.p.map(this.sensors[j].val, 0, 250, 1, 0);
+      inputs[j + 7] = this.p.map(this.sensors[j].val, 0, 150, 1, 0);
 
     }
 
@@ -130,9 +134,8 @@ export class Bird {
       const d = p5.Vector.dist(food[i], this.pos);
 
 
-      if (d < 8) {
+      if (d < 32) {
         food.splice(i, 1);
-        this.score *= 2;
         this.health++;
       }
     }
@@ -156,26 +159,26 @@ export class Bird {
     this.score++;
     if (this.health < 0) {
       this.alive = false;
-      this.score = 1;
+      this.score -= 100;
     }
 
     if (this.pos.y > this.p.height) {
-      this.score = 1;
+      this.score -= 100;
       this.alive = false;
     }
 
     if (this.pos.y < 0) {
-      this.score = 1;
+      this.score -= 100;
       this.alive = false;
     }
 
     if (this.pos.x > this.p.width) {
-      this.score = 1;
+      this.score -= 100;
       this.alive = false;
     }
 
     if (this.pos.x < 0) {
-      this.score = 1;
+      this.score -= 100;
       this.alive = false;
     }
   }
@@ -193,7 +196,7 @@ export class Bird {
     this.p.ellipse(this.pos.x, this.pos.y, 32, 32);
 
     this.p.fill(255);
-    this.p.rect(this.pos.x - 16, this.pos.y, this.p.map(this.health, 0, 100, 0, 32), 2);
+    this.p.rect(this.pos.x - 16, this.pos.y, this.p.map(this.health, 0, this.maxHealth, 0, 32), 2);
 
 
     this.p.textSize(10);

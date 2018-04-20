@@ -33,14 +33,14 @@ export class GeneticAlgorith {
   private caluclateFitness(birds) {
     let sum = 0;
     for (const bird of birds) {
-      bird.score = this.p.pow(bird.score, 2);
+      // bird.score = this.p.pow(bird.score, 2);
       sum += bird.score;
     }
 
     for (const bird of birds) {
       bird.fitness = bird.score / sum;
     }
-
+    console.log('avrg fitness', sum);
     return birds;
   }
 }
