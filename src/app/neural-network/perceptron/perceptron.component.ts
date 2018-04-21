@@ -23,7 +23,11 @@ export class PerceptronComponent implements OnInit {
   private ga: GeneticAlgorith;
 
   public cylces = 1;
+  public debug = false;
   private food = [];
+  public best;
+
+  runningBest = false;
 
   private trainingData = [
     { inputs: [0, 0], targets: [0] },
@@ -32,14 +36,18 @@ export class PerceptronComponent implements OnInit {
     { inputs: [1, 1], targets: [0] }
   ];
 
-  constructor() {
-  }
+  constructor() {}
 
   private generateFood() {
-    const foodCount = this.p.random(100, 150);
+    const foodCount = 200;
 
     for (let i = 0; i < foodCount; i++) {
-      this.food.push(this.p.createVector(this.p.random(this.p.width), this.p.random(this.p.height)));
+      this.food.push(
+        this.p.createVector(
+          this.p.random(200, this.p.width - 200),
+          this.p.random(200, this.p.height - 200)
+        )
+      );
     }
   }
 
@@ -53,28 +61,50 @@ export class PerceptronComponent implements OnInit {
       for (let i = 0; i < this.population; i++) {
         this.birds.push(new Bird(this.p, this.p.random(this.p.width)));
       }
-      this.ga = new GeneticAlgorith(this.p, this.birds, this.population);
+      this.generateFood();
 
+      this.ga = new GeneticAlgorith(this.p, this.birds, this.population);
     };
 
     this.p.draw = () => {
-
       for (let i = 0; i < this.cylces; i++) {
-        while (this.food.length < 50) {
-          this.food.push(this.p.createVector(this.p.random(50, this.p.width - 50), this.p.random(50, this.p.height - 50)));
+        while (this.food.length < 200) {
+          this.food.push(
+            this.p.createVector(
+              this.p.random(200, this.p.width - 200),
+              this.p.random(200, this.p.height - 200)
+            )
+          );
         }
 
+        let record = -1;
         for (const bird of this.birds) {
-          if (bird.alive) {
             bird.eat(this.food);
             bird.think(this.food);
             bird.update(this.food);
+        }
+
+        for (let j = this.birds.length - 1; j >= 0; j--) {
+          const b = this.birds[j];
+
+          if (!b.alive) {
+            this.birds.splice(j, 1);
+          } else {
+            if (b.score > record) {
+              record = b.score;
+              this.best = b;
+            }
           }
         }
 
-        if (this.birds.filter(b => b.alive).length <= 0) {
-          this.birds = this.ga.nextGeneration(this.birds);
-          // this.p.noLoop();
+        if (this.birds.length < 20) {
+          for (const b of this.birds) {
+            const newBird = b.clone(0.1 * b.score / record);
+
+            if (newBird != null) {
+              this.birds.push(newBird);
+            }
+          }
         }
       }
 
@@ -84,9 +114,11 @@ export class PerceptronComponent implements OnInit {
         this.p.point(food.x, food.y);
       }
 
+      this.best.highlight();
+
       for (const bird of this.birds) {
         if (bird.alive) {
-          bird.show();
+          bird.show(this.debug);
         }
       }
     };

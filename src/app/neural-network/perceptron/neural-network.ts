@@ -22,16 +22,16 @@ export const tanh = new ActivationFunction(
 
 
 export class NeuralNetwork {
-  private input_nodes: number;
-  private hidden_nodes: number;
-  private output_nodes: number;
+  public input_nodes: number;
+  public hidden_nodes: number;
+  public output_nodes: number;
 
   public weights_ih: Matrix;
   public weights_ho: Matrix;
   public bias_h: Matrix;
   public bias_o: Matrix;
 
-  private learning_rate: number;
+  public learning_rate: number;
 
   private activation_function: ActivationFunction;
 
