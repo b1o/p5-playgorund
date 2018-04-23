@@ -3,6 +3,7 @@ import { NeuralNetwork } from './neural-network';
 import { Matrix } from './matrix';
 import { Bird } from './bird';
 import { GeneticAlgorith } from './ga';
+import { bestnn } from './bestnn';
 
 declare var p5;
 
@@ -25,7 +26,8 @@ export class PerceptronComponent implements OnInit {
   public cylces = 1;
   public debug = false;
   private food = [];
-  public best;
+  public best: Bird;
+  public iterations = 0;
 
   runningBest = false;
 
@@ -35,8 +37,10 @@ export class PerceptronComponent implements OnInit {
     { inputs: [0, 1], targets: [1] },
     { inputs: [1, 1], targets: [0] }
   ];
+  public generations = 0;
+  public lowest: Bird;
 
-  constructor() {}
+  constructor() { }
 
   private generateFood() {
     const foodCount = 200;
@@ -44,11 +48,15 @@ export class PerceptronComponent implements OnInit {
     for (let i = 0; i < foodCount; i++) {
       this.food.push(
         this.p.createVector(
-          this.p.random(200, this.p.width - 200),
-          this.p.random(200, this.p.height - 200)
+          this.p.random(this.p.width),
+          this.p.random(this.p.height)
         )
       );
     }
+  }
+
+  private exportBest() {
+    console.log(this.best.brain.serialize());
   }
 
   private drawing(p) {
@@ -58,8 +66,8 @@ export class PerceptronComponent implements OnInit {
       this.p.background(0);
       this.birds = new Array<Bird>();
       this.food = [];
-      for (let i = 0; i < this.population; i++) {
-        this.birds.push(new Bird(this.p, this.p.random(this.p.width)));
+      for (let i = 0; i < 50; i++) {
+        this.birds.push(new Bird(this.p));
       }
       this.generateFood();
 
@@ -71,17 +79,18 @@ export class PerceptronComponent implements OnInit {
         while (this.food.length < 200) {
           this.food.push(
             this.p.createVector(
-              this.p.random(200, this.p.width - 200),
-              this.p.random(200, this.p.height - 200)
+              this.p.random(this.p.width),
+              this.p.random(this.p.height)
             )
           );
         }
 
         let record = -1;
+        let lowest = Infinity;
         for (const bird of this.birds) {
-            bird.eat(this.food);
-            bird.think(this.food);
-            bird.update(this.food);
+          // bird.eat(this.food);
+          bird.think(this.food);
+          bird.update(this.food);
         }
 
         for (let j = this.birds.length - 1; j >= 0; j--) {
@@ -94,18 +103,31 @@ export class PerceptronComponent implements OnInit {
               record = b.score;
               this.best = b;
             }
+
+            if (b.score < lowest) {
+              lowest = b.score;
+              this.lowest = b;
+            }
           }
         }
 
-        if (this.birds.length < 20) {
+        if (this.birds.length < 50) {
           for (const b of this.birds) {
             const newBird = b.clone(0.1 * b.score / record);
 
             if (newBird != null) {
               this.birds.push(newBird);
+              this.generations++;
             }
           }
         }
+
+        // if (this.iterations % 1000 === 0) {
+        //   this.lowest.alive = false;
+        //   console.log('culling weakest', this.lowest)
+        // }
+
+        this.iterations++;
       }
 
       this.p.background(0);
@@ -115,6 +137,7 @@ export class PerceptronComponent implements OnInit {
       }
 
       this.best.highlight();
+      this.lowest.highlight();
 
       for (const bird of this.birds) {
         if (bird.alive) {

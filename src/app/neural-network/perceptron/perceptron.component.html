@@ -2,4 +2,9 @@
 <div style="position: fixed; bottom:0; right:0; margin: 20px;">
   <input  type="number" [(ngModel)]="cylces">
   <button (click)="debug = !debug" >toggle debug</button>
+  <button (click)="exportBest()" >Export best</button>
+  <p style="color: white;">
+    Generations: {{generations}}
+  </p>
+
 </div>

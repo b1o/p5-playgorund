@@ -29,11 +29,11 @@ export class Bird {
   public health = 2;
   public maxHealth = 3;
   public minSpeed = 0.25;
-  public maxSpeed = 8;
+  public maxSpeed = 4;
   public sensorLength = 50;
   public acc;
 
-  private totalSensors = 8;
+  private totalSensors = 12;
   private r = 4;
   private foodEaten = 0;
   private sensorAngle = (Math.PI * 2) / this.totalSensors;
@@ -41,7 +41,7 @@ export class Bird {
   private sensors: Array<Sensor>;
   public mutationRate = 0.1;
 
-  constructor(private p, x: number | NeuralNetwork) {
+  constructor(private p, x?: NeuralNetwork) {
     this.sensors = [];
     for (let angle = 0; angle < this.p.TWO_PI; angle += this.sensorAngle) {
       this.sensors.push(new Sensor(angle));
@@ -52,7 +52,7 @@ export class Bird {
       this.brain = x.copy();
       this.brain.mutate(this.mutate.bind(this));
     } else {
-      const inputs = this.sensors.length + 9;
+      const inputs = this.sensors.length + 7;
 
       this.brain = new NeuralNetwork(inputs, 128, 2);
 
@@ -104,18 +104,17 @@ export class Bird {
 
     const inputs = [];
     // current pos
-    inputs[0] = this.p.constrain(this.p.map(this.pos.x, 0, 0, 0, 1), 0, 1);
-    inputs[1] = this.p.constrain(this.p.map(this.pos.y, 0, 0, 0, 1), 0, 1);
-    inputs[2] = this.p.constrain(this.p.map(this.pos.x, this.p.width, this.p.width, 0, 1), 0, 1);
-    inputs[3] = this.p.constrain(this.p.map(this.pos.y, this.p.height, this.p.height, 0, 1), 0, 1);
+    inputs[0] = this.p.constrain(this.p.map(this.pos.x, 50, 0, 0, 1), 0, 1);
+    inputs[1] = this.p.constrain(this.p.map(this.pos.y, 50, 0, 0, 1), 0, 1);
+    inputs[2] = this.p.constrain(this.p.map(this.pos.x, this.p.width - 50, this.p.width, 0, 1), 0, 1);
+    inputs[3] = this.p.constrain(this.p.map(this.pos.y, this.p.height - 50, this.p.height, 0, 1), 0, 1);
     inputs[4] = this.velocity.x / this.maxSpeed;
     inputs[5] = this.velocity.y / this.maxSpeed;
     inputs[6] = this.health / this.maxHealth;
-    inputs[7] = this.pos.x / this.p.width;
-    inputs[8] = this.pos.y / this.p.height;
+
 
     for (let j = 0; j < this.sensors.length; j++) {
-      inputs[j + 9] = this.p.map(this.sensors[j].val, 0, this.sensorLength, 1, 0);
+      inputs[j + 7] = this.p.map(this.sensors[j].val, 0, this.sensorLength, 1, 0);
 
     }
 
@@ -125,7 +124,7 @@ export class Bird {
     desired.mult(this.maxSpeed);
     // Craig Reynolds steering formula
     const steer = p5.Vector.sub(desired, this.velocity);
-    steer.limit(0.5);
+    steer.limit(0.1);
     // Apply the force
     this.acc.add(steer);
   }
@@ -148,9 +147,9 @@ export class Bird {
       const d = p5.Vector.dist(food[i], this.pos);
 
 
-      if (d < 8) {
+      if (d < this.r * 2) {
         food.splice(i, 1);
-        this.score++;
+        this.score += 100;
         this.foodEaten++;
         this.health++;
       }
@@ -161,8 +160,7 @@ export class Bird {
   public update(food) {
     this.velocity.add(this.acc);
     this.velocity.limit(this.maxSpeed);
-    if
-    (this.velocity.mag() < this.minSpeed) {
+    if (this.velocity.mag() < this.minSpeed) {
       this.velocity.setMag(this.minSpeed);
     }
 
@@ -175,32 +173,37 @@ export class Bird {
       this.score--;
     }
 
-    if (this.velocity.mag() >= 2) {
-      this.health += 0.005;
-    }
+    // if (this.velocity.mag() >= 2) {
+    //   this.health += 0.005;
+    // }
 
     this.acc.mult(0);
 
-    this.health -= 0.01;
+    // this.health -= 0.005;
     this.score++;
     if (this.health < 0) {
       this.alive = false;
+      this.score = 1;
     }
 
     if (this.pos.y > this.p.height) {
+      this.score = 1;
       this.alive = false;
     }
 
     if (this.pos.y < 0) {
+      this.score = 1;
       this.alive = false;
     }
 
     if (this.pos.x > this.p.width) {
+      this.score = 1;
       this.alive = false;
     }
 
     if (this.pos.x < 0) {
       this.alive = false;
+      this.score = 1;
     }
   }
 
@@ -218,18 +221,18 @@ export class Bird {
     this.p.push();
     this.p.translate(this.pos.x, this.pos.y);
 
-   if (debug) {
-    for (let i = 0; i < this.sensors.length; i++) {
-      const val = this.sensors[i].val;
+    if (debug) {
+      for (let i = 0; i < this.sensors.length; i++) {
+        const val = this.sensors[i].val;
 
-      if (val > 0) {
-        this.p.stroke(col);
-        this.p.strokeWeight(this.p.map(val, 0, this.sensorLength, 4, 0));
-        const position = this.sensors[i].dir;
-        this.p.line(0, 0, position.x * val, position.y * val);
+        if (val > 0) {
+          this.p.stroke(col);
+          this.p.strokeWeight(this.p.map(val, 0, this.sensorLength, 4, 0));
+          const position = this.sensors[i].dir;
+          this.p.line(0, 0, position.x * val, position.y * val);
+        }
       }
-  }
-   }
+    }
 
     this.p.noStroke();
     this.p.fill(255, 200);
