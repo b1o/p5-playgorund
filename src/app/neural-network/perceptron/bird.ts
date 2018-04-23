@@ -1,4 +1,5 @@
 import { NeuralNetwork } from './neural-network';
+import { bestNN } from './bestnn';
 
 declare var p5;
 
@@ -52,9 +53,9 @@ export class Bird {
       this.brain = x.copy();
       this.brain.mutate(this.mutate.bind(this));
     } else {
-      const inputs = this.sensors.length + 7;
+      const inputs = this.sensors.length + 6;
 
-      this.brain = new NeuralNetwork(inputs, 128, 2);
+      this.brain = NeuralNetwork.deserialize(bestNN);
 
     }
 
@@ -110,11 +111,10 @@ export class Bird {
     inputs[3] = this.p.constrain(this.p.map(this.pos.y, this.p.height - 50, this.p.height, 0, 1), 0, 1);
     inputs[4] = this.velocity.x / this.maxSpeed;
     inputs[5] = this.velocity.y / this.maxSpeed;
-    inputs[6] = this.health / this.maxHealth;
 
 
     for (let j = 0; j < this.sensors.length; j++) {
-      inputs[j + 7] = this.p.map(this.sensors[j].val, 0, this.sensorLength, 1, 0);
+      inputs[j + 6] = this.p.map(this.sensors[j].val, 0, this.sensorLength, 1, 0);
 
     }
 
@@ -179,7 +179,7 @@ export class Bird {
 
     this.acc.mult(0);
 
-    // this.health -= 0.005;
+    this.health -= 0.005;
     this.score++;
     if (this.health < 0) {
       this.alive = false;

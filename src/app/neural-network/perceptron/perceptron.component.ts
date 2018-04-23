@@ -3,7 +3,7 @@ import { NeuralNetwork } from './neural-network';
 import { Matrix } from './matrix';
 import { Bird } from './bird';
 import { GeneticAlgorith } from './ga';
-import { bestnn } from './bestnn';
+import { bestNN } from './bestnn';
 
 declare var p5;
 
@@ -28,6 +28,8 @@ export class PerceptronComponent implements OnInit {
   private food = [];
   public best: Bird;
   public iterations = 0;
+  public avrgScore = 0;
+  public record = 0;
 
   runningBest = false;
 
@@ -48,8 +50,8 @@ export class PerceptronComponent implements OnInit {
     for (let i = 0; i < foodCount; i++) {
       this.food.push(
         this.p.createVector(
-          this.p.random(this.p.width),
-          this.p.random(this.p.height)
+          this.p.random(50, this.p.width - 50),
+          this.p.random(50, this.p.height - 50)
         )
       );
     }
@@ -64,6 +66,7 @@ export class PerceptronComponent implements OnInit {
     this.p.setup = () => {
       this.p.createCanvas(window.innerWidth, window.innerHeight);
       this.p.background(0);
+      this.p.frameRate(240);
       this.birds = new Array<Bird>();
       this.food = [];
       for (let i = 0; i < 50; i++) {
@@ -79,8 +82,8 @@ export class PerceptronComponent implements OnInit {
         while (this.food.length < 200) {
           this.food.push(
             this.p.createVector(
-              this.p.random(this.p.width),
-              this.p.random(this.p.height)
+              this.p.random(50, this.p.width - 50),
+              this.p.random(50, this.p.height - 50)
             )
           );
         }
@@ -88,17 +91,20 @@ export class PerceptronComponent implements OnInit {
         let record = -1;
         let lowest = Infinity;
         for (const bird of this.birds) {
-          // bird.eat(this.food);
+          bird.eat(this.food);
           bird.think(this.food);
           bird.update(this.food);
         }
 
+        let scoreSum = 0;
         for (let j = this.birds.length - 1; j >= 0; j--) {
           const b = this.birds[j];
 
           if (!b.alive) {
             this.birds.splice(j, 1);
           } else {
+            scoreSum += b.score;
+
             if (b.score > record) {
               record = b.score;
               this.best = b;
@@ -110,6 +116,11 @@ export class PerceptronComponent implements OnInit {
             }
           }
         }
+
+        if ( record > this.record) {
+          this.record = record;
+        }
+        this.avrgScore = scoreSum / this.birds.length;
 
         if (this.birds.length < 50) {
           for (const b of this.birds) {
@@ -133,7 +144,8 @@ export class PerceptronComponent implements OnInit {
       this.p.background(0);
       for (const food of this.food) {
         this.p.stroke(255);
-        this.p.point(food.x, food.y);
+        this.p.fill(0, 255, 0, 100);
+        this.p.ellipse(food.x, food.y, 8, 8);
       }
 
       this.best.highlight();
